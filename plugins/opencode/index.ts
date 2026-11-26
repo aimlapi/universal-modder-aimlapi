@@ -2,8 +2,8 @@
  * universal-modder: OpenCode 2 plugin.
  *
  * Exposes the `um` CLI as one passthrough tool (`um_run`, plus `um --help` behaviour) and registers
- * the fal MCP server. The CLI itself is never modified: the agent always calls the same launcher a
- * human would.
+ * the fal MCP server, plus the AI/ML API MCP server switched off until the user turns it on. The CLI
+ * itself is never modified: the agent always calls the same launcher a human would.
  */
 import { spawn } from "node:child_process"
 import { accessSync, constants } from "node:fs"
@@ -27,6 +27,23 @@ function falMcp(key: string) {
     headers: { Authorization: `Bearer ${key}` },
     oauth: false as const,
     disabled: false,
+  }
+}
+
+/**
+ * AI/ML API's hosted MCP server (models plus web, document and social-data tools). The key only ever goes
+ * to this exact URL. It is registered disabled: the user turns it on in OpenCode, or with
+ * `"options": { "aimlapi": true }` for the plugin.
+ */
+const AIMLAPI_MCP_URL = "https://mcp.aimlapi.com/mcp"
+
+function aimlapiMcp(key: string, enabled: boolean) {
+  return {
+    type: "remote" as const,
+    url: AIMLAPI_MCP_URL,
+    headers: { Authorization: `Bearer ${key}` },
+    oauth: false as const,
+    disabled: !enabled,
   }
 }
 
@@ -106,6 +123,13 @@ export default Plugin.define({
     await ctx.mcp.transform((editor) => {
       const key = process.env.FAL_KEY
       if (key && !editor.get("fal")) editor.set("fal", falMcp(key))
+    })
+
+    // AI/ML API's server: only with AIMLAPI_API_KEY, never over a user's own `aimlapi` entry, and off
+    // unless the user turns it on.
+    await ctx.mcp.transform((editor) => {
+      const key = process.env.AIMLAPI_API_KEY
+      if (key && !editor.get("aimlapi")) editor.set("aimlapi", aimlapiMcp(key, ctx.options.aimlapi === true))
     })
 
     await ctx.tool.transform((editor) => {

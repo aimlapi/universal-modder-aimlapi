@@ -43,6 +43,11 @@ plugin always runs `um` from `PATH` (or `options.command`), because `bin/um` is 
   description and answers a typo with the group list instead of spawning the CLI.
 - The **fal MCP server** (`https://mcp.fal.ai/mcp`), when `FAL_KEY` is set in OpenCode's environment and no
   `fal` server is configured already. For images without a key, `um comfy` uses a local ComfyUI server.
+- The **AI/ML API MCP server** (`https://mcp.aimlapi.com/mcp`), when `AIMLAPI_API_KEY` is set and no
+  `aimlapi` server is configured already. It is added **disabled**: turn it on in OpenCode, or set
+  `"options": { "aimlapi": true }` for the plugin. One connector for chat, image, video, music and speech
+  models plus web crawling, document parsing and social-media data; runs are billed to the AI/ML API
+  account. Keys: https://aimlapi.com/app/keys, docs: https://docs.aimlapi.com/quickstart/mcp.
 
 One passthrough tool rather than one per group: `um --help` and `um <group> --help` already document the
 groups, and each extra tool costs context in every session.
@@ -51,4 +56,6 @@ The tool shells out to the same `um` launcher a human would use. The plugin neve
 toolkit, so the CLI stays the single source of truth. Skills come from a clone (`skills.paths` in the
 repo's `opencode.json`) or `npx skills add`, not from this plugin.
 
-`tests/test_opencode_plugin.py` asserts the group list in `index.ts` against `GROUPS` in `um/cli.py`.
+`tests/test_opencode_plugin.py` asserts the group list in `index.ts` against `GROUPS` in `um/cli.py`, and
+(with Node 22.18+ on `PATH`) loads the plugin against a stub OpenCode API to check which MCP servers it
+registers.
